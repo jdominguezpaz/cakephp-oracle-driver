@@ -26,21 +26,21 @@ class OCI8Connection extends PDO
      *
      * @var bool
      */
-    protected $_inTransaction = false;
+    protected bool $_inTransaction = false;
 
     /**
      * Database connection.
      *
-     * @var resource
+     * @var mixed OCI8 connection resource
      */
-    protected $dbh;
+    protected mixed $dbh;
 
     /**
      * @var int
      */
-    protected $executeMode = OCI_COMMIT_ON_SUCCESS;
+    protected int $executeMode = OCI_COMMIT_ON_SUCCESS;
 
-    protected $_defaultConfig = [];
+    protected array $_defaultConfig = [];
 
     /**
      * Creates a Connection to an Oracle Database using oci8 extension.
@@ -52,11 +52,11 @@ class OCI8Connection extends PDO
      *
      * @throws \CakeDC\OracleDriver\Database\OCI8\OCI8Exception
      */
-    public function __construct($dsn, $username, $password, $options)
+    public function __construct(string $dsn, string $username, string $password, array $options)
     {
         $persistent = !empty($options['persistent']);
         $charset = !empty($options['charset']) ? $options['charset'] : null;
-        $sessionMode = !empty($options['sessionMode']) ? $options['sessionMode'] : null;
+        $sessionMode = !empty($options['sessionMode']) ? (int)$options['sessionMode'] : OCI_DEFAULT;
 
         if ($persistent) {
             $this->dbh = @oci_pconnect($username, $password, $dsn, $charset, $sessionMode);
@@ -74,9 +74,9 @@ class OCI8Connection extends PDO
     /**
      * Returns database connection.
      *
-     * @return resource
+     * @return mixed OCI8 connection resource
      */
-    public function dbh()
+    public function dbh(): mixed
     {
         return $this->dbh;
     }
@@ -85,9 +85,9 @@ class OCI8Connection extends PDO
      * Returns oracle version.
      *
      * @throws \UnexpectedValueException if the version string returned by the database server does not parsed
-     * @return int Version number
+     * @return string Version number
      */
-    public function getServerVersion()
+    public function getServerVersion(): string
     {
         $versionData = oci_server_version($this->dbh);
         if (!preg_match('/\s+(\d+\.\d+\.\d+\.\d+\.\d+)\s+/', $versionData, $version)) {
@@ -100,19 +100,17 @@ class OCI8Connection extends PDO
     /**
      * {@inheritdoc}
      */
-    public function prepare($statement, $options = null)
+    public function prepare(string $query, array $options = []): OCI8Statement|false
     {
-        return new OCI8Statement($this->dbh, $statement, $this);
+        return new OCI8Statement($this->dbh, $query, $this);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function query($statement, $mode = PDO::ATTR_DEFAULT_FETCH_MODE, $arg3 = null)
+    public function query(string $query, ?int $fetchMode = null, mixed ...$fetchModeArgs): OCI8Statement|false
     {
-        $args = func_get_args();
-        $sql = $args[0];
-        $stmt = $this->prepare($sql);
+        $stmt = $this->prepare($query);
         $stmt->execute();
 
         return $stmt;
@@ -121,9 +119,9 @@ class OCI8Connection extends PDO
     /**
      * {@inheritdoc}
      */
-    public function quote($string, $type = \PDO::PARAM_STR)
+    public function quote(string $string, int $type = PDO::PARAM_STR): string|false
     {
-        if (is_int($string) || is_float($string)) {
+        if (is_numeric($string)) {
             return $string;
         }
         $string = str_replace("'", "''", $string);
@@ -134,7 +132,7 @@ class OCI8Connection extends PDO
     /**
      * {@inheritdoc}
      */
-    public function exec($statement)
+    public function exec(string $statement): int|false
     {
         $stmt = $this->prepare($statement);
         $stmt->execute();
@@ -147,7 +145,7 @@ class OCI8Connection extends PDO
      *
      * @return int
      */
-    public function getExecuteMode()
+    public function getExecuteMode(): int
     {
         return $this->executeMode;
     }
@@ -158,7 +156,7 @@ class OCI8Connection extends PDO
      * @deprecated Use inTransaction() instead
      * @return bool
      */
-    public function isTransaction()
+    public function isTransaction(): bool
     {
         return $this->inTransaction();
     }
@@ -166,7 +164,7 @@ class OCI8Connection extends PDO
     /**
      * {@inheritdoc}
      */
-    public function inTransaction()
+    public function inTransaction(): bool
     {
         return $this->executeMode == OCI_NO_AUTO_COMMIT;
     }
@@ -174,7 +172,7 @@ class OCI8Connection extends PDO
     /**
      * {@inheritdoc}
      */
-    public function beginTransaction()
+    public function beginTransaction(): bool
     {
         $this->executeMode = OCI_NO_AUTO_COMMIT;
 
@@ -184,7 +182,7 @@ class OCI8Connection extends PDO
     /**
      * {@inheritdoc}
      */
-    public function commit()
+    public function commit(): bool
     {
         if (!oci_commit($this->dbh)) {
             throw OCI8Exception::fromErrorInfo($this->errorInfo());
@@ -197,7 +195,7 @@ class OCI8Connection extends PDO
     /**
      * {@inheritdoc}
      */
-    public function rollBack()
+    public function rollBack(): bool
     {
         if (!oci_rollback($this->dbh)) {
             throw OCI8Exception::fromErrorInfo($this->errorInfo());
@@ -210,22 +208,20 @@ class OCI8Connection extends PDO
     /**
      * {@inheritdoc}
      */
-    public function errorCode()
+    public function errorCode(): string
     {
         $error = oci_error($this->dbh);
         if ($error !== false) {
-            $error = $error['code'];
-        } else {
-            return '00000';
+            return (string)$error['code'];
         }
 
-        return $error;
+        return '00000';
     }
 
     /**
      * {@inheritdoc}
      */
-    public function errorInfo()
+    public function errorInfo(): array|false
     {
         return oci_error($this->dbh);
     }

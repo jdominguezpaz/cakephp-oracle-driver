@@ -18,10 +18,10 @@ class OCI8Exception extends Exception
     /**
      * OCI Error builder.
      *
-     * @param array $error Error information that includes error message and code.
+     * @param array|false $error Error information that includes error message and code.
      * @return \CakeDC\OracleDriver\Database\OCI8\OCI8Exception
      */
-    public static function fromErrorInfo($error)
+    public static function fromErrorInfo(array|false $error): self
     {
         return new self($error['message'], $error['code']);
     }
