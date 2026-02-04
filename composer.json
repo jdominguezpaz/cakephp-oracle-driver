@@ -1,6 +1,6 @@
 {
-    "name": "cakedc/cakephp-oracle-driver",
-    "description": "CakePHP 3 Driver for Oracle Database",
+    "name": "jdominguezpaz/cakephp-oracle-driver",
+    "description": "CakePHP 3 Driver for Oracle Database (jdominguezpaz fork)",
     "type": "cakephp-plugin",
     "keywords": [
         "cakephp",
@@ -12,13 +12,18 @@
     "license": "MIT",
     "authors": [
         {
+            "name": "jdominguezpaz",
+            "role": "Maintainer (Fork)"
+        },
+        {
             "name": "CakeDC",
             "homepage": "http://www.cakedc.com",
-            "role": "Author"
+            "role": "Original Author"
         },
         {
             "name": "Others",
-            "homepage": "https://github.com/cakedc/cakephp-oracle-driver/graphs/contributors"
+            "homepage": "https://github.com/cakedc/cakephp-oracle-driver/graphs/contributors",
+            "role": "Original Contributors"
         }
     ],
     "support": {
